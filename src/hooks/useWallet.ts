@@ -99,15 +99,15 @@ export const useWallet = () => {
           onConflict: 'wallet_address'
         });
 
-      // Sync balances using Moralis
-      await supabase.functions.invoke('moralis-sync', {
+      // Sync balances using Alchemy
+      await supabase.functions.invoke('alchemy-sync', {
         body: {
           walletAddress: address,
           userId: user.id
         }
       });
     } catch (error) {
-      console.error('Error syncing wallet:', error);
+      console.error('Error syncing wallet with Alchemy:', error);
     }
   };
 
