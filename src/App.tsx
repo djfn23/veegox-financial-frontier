@@ -18,6 +18,7 @@ import About from "./pages/About";
 import Help from "./pages/Help";
 import Analytics from "./pages/Analytics";
 import Security from "./pages/Security";
+import Blockchain from "./pages/Blockchain";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +44,7 @@ const App = () => (
           <Route path="/help" element={<Help />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/security" element={<Security />} />
+          <Route path="/blockchain" element={<Blockchain />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

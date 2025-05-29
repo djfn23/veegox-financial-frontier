@@ -9,16 +9,354 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      blockchain_transactions: {
+        Row: {
+          amount: number
+          block_number: number | null
+          confirmed_at: string | null
+          created_at: string
+          from_address: string | null
+          gas_price: number | null
+          gas_used: number | null
+          id: string
+          network_fee: number | null
+          status: Database["public"]["Enums"]["transaction_status"]
+          to_address: string | null
+          token_type: Database["public"]["Enums"]["token_type"]
+          transaction_hash: string | null
+          transaction_type: Database["public"]["Enums"]["transaction_type"]
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          block_number?: number | null
+          confirmed_at?: string | null
+          created_at?: string
+          from_address?: string | null
+          gas_price?: number | null
+          gas_used?: number | null
+          id?: string
+          network_fee?: number | null
+          status?: Database["public"]["Enums"]["transaction_status"]
+          to_address?: string | null
+          token_type: Database["public"]["Enums"]["token_type"]
+          transaction_hash?: string | null
+          transaction_type: Database["public"]["Enums"]["transaction_type"]
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          block_number?: number | null
+          confirmed_at?: string | null
+          created_at?: string
+          from_address?: string | null
+          gas_price?: number | null
+          gas_used?: number | null
+          id?: string
+          network_fee?: number | null
+          status?: Database["public"]["Enums"]["transaction_status"]
+          to_address?: string | null
+          token_type?: Database["public"]["Enums"]["token_type"]
+          transaction_hash?: string | null
+          transaction_type?: Database["public"]["Enums"]["transaction_type"]
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      governance_proposals: {
+        Row: {
+          created_at: string
+          description: string
+          end_date: string
+          execution_date: string | null
+          id: string
+          proposal_id: string
+          proposer_address: string
+          proposer_user_id: string | null
+          quorum_threshold: number
+          start_date: string
+          status: Database["public"]["Enums"]["proposal_status"]
+          title: string
+          total_votes: number
+          votes_against: number
+          votes_for: number
+          voting_power_required: number
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          end_date: string
+          execution_date?: string | null
+          id?: string
+          proposal_id: string
+          proposer_address: string
+          proposer_user_id?: string | null
+          quorum_threshold?: number
+          start_date?: string
+          status?: Database["public"]["Enums"]["proposal_status"]
+          title: string
+          total_votes?: number
+          votes_against?: number
+          votes_for?: number
+          voting_power_required?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          end_date?: string
+          execution_date?: string | null
+          id?: string
+          proposal_id?: string
+          proposer_address?: string
+          proposer_user_id?: string | null
+          quorum_threshold?: number
+          start_date?: string
+          status?: Database["public"]["Enums"]["proposal_status"]
+          title?: string
+          total_votes?: number
+          votes_against?: number
+          votes_for?: number
+          voting_power_required?: number
+        }
+        Relationships: []
+      }
+      governance_votes: {
+        Row: {
+          created_at: string
+          id: string
+          proposal_id: string | null
+          transaction_hash: string | null
+          user_id: string | null
+          vote_choice: boolean
+          vote_power: number
+          wallet_address: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          proposal_id?: string | null
+          transaction_hash?: string | null
+          user_id?: string | null
+          vote_choice: boolean
+          vote_power: number
+          wallet_address: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          proposal_id?: string | null
+          transaction_hash?: string | null
+          user_id?: string | null
+          vote_choice?: boolean
+          vote_power?: number
+          wallet_address?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "governance_votes_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "governance_proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      moralis_events: {
+        Row: {
+          block_number: number
+          contract_address: string
+          created_at: string
+          event_data: Json
+          event_type: string
+          id: string
+          log_index: number
+          processed: boolean | null
+          processed_at: string | null
+          transaction_hash: string
+        }
+        Insert: {
+          block_number: number
+          contract_address: string
+          created_at?: string
+          event_data: Json
+          event_type: string
+          id?: string
+          log_index: number
+          processed?: boolean | null
+          processed_at?: string | null
+          transaction_hash: string
+        }
+        Update: {
+          block_number?: number
+          contract_address?: string
+          created_at?: string
+          event_data?: Json
+          event_type?: string
+          id?: string
+          log_index?: number
+          processed?: boolean | null
+          processed_at?: string | null
+          transaction_hash?: string
+        }
+        Relationships: []
+      }
+      staking_pools: {
+        Row: {
+          apy_rate: number
+          id: string
+          is_active: boolean | null
+          last_reward_date: string | null
+          rewards_earned: number
+          stake_date: string
+          staked_amount: number
+          token_type: Database["public"]["Enums"]["token_type"]
+          unstake_date: string | null
+          user_id: string | null
+        }
+        Insert: {
+          apy_rate?: number
+          id?: string
+          is_active?: boolean | null
+          last_reward_date?: string | null
+          rewards_earned?: number
+          stake_date?: string
+          staked_amount?: number
+          token_type: Database["public"]["Enums"]["token_type"]
+          unstake_date?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          apy_rate?: number
+          id?: string
+          is_active?: boolean | null
+          last_reward_date?: string | null
+          rewards_earned?: number
+          stake_date?: string
+          staked_amount?: number
+          token_type?: Database["public"]["Enums"]["token_type"]
+          unstake_date?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      token_balances: {
+        Row: {
+          balance: number
+          id: string
+          locked_balance: number
+          token_type: Database["public"]["Enums"]["token_type"]
+          updated_at: string
+          user_id: string | null
+          wallet_address: string
+        }
+        Insert: {
+          balance?: number
+          id?: string
+          locked_balance?: number
+          token_type: Database["public"]["Enums"]["token_type"]
+          updated_at?: string
+          user_id?: string | null
+          wallet_address: string
+        }
+        Update: {
+          balance?: number
+          id?: string
+          locked_balance?: number
+          token_type?: Database["public"]["Enums"]["token_type"]
+          updated_at?: string
+          user_id?: string | null
+          wallet_address?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_wallets: {
+        Row: {
+          created_at: string
+          id: string
+          is_primary: boolean | null
+          updated_at: string
+          user_id: string | null
+          wallet_address: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_primary?: boolean | null
+          updated_at?: string
+          user_id?: string | null
+          wallet_address: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_primary?: boolean | null
+          updated_at?: string
+          user_id?: string | null
+          wallet_address?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_voting_power: {
+        Args: { p_user_id: string }
+        Returns: number
+      }
+      has_role: {
+        Args: {
+          _user_id: string
+          _role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: boolean
+      }
+      update_token_balance: {
+        Args: {
+          p_user_id: string
+          p_wallet_address: string
+          p_token_type: Database["public"]["Enums"]["token_type"]
+          p_amount: number
+          p_operation: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
+      proposal_status: "active" | "passed" | "failed" | "executed"
+      token_type: "VEX" | "sVEX" | "gVEX"
+      transaction_status: "pending" | "confirmed" | "failed"
+      transaction_type:
+        | "mint"
+        | "burn"
+        | "transfer"
+        | "stake"
+        | "unstake"
+        | "swap"
+        | "governance_vote"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +471,20 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+      proposal_status: ["active", "passed", "failed", "executed"],
+      token_type: ["VEX", "sVEX", "gVEX"],
+      transaction_status: ["pending", "confirmed", "failed"],
+      transaction_type: [
+        "mint",
+        "burn",
+        "transfer",
+        "stake",
+        "unstake",
+        "swap",
+        "governance_vote",
+      ],
+    },
   },
 } as const
