@@ -29,7 +29,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const alchemyApiKey = Deno.env.get('ALCHEMY_API_KEY')
+    const alchemyApiKey = Deno.env.get('alchemy')
     if (!alchemyApiKey) {
       throw new Error('ALCHEMY_API_KEY not configured')
     }
@@ -95,6 +95,14 @@ async function deployMonitoring(network: string, contractAddress: string, alchem
       chainId: 8453,
       rpcUrl: `https://base-mainnet.g.alchemy.com/v2/${alchemyApiKey}`,
       wsUrl: `wss://base-mainnet.g.alchemy.com/v2/${alchemyApiKey}`
+    },
+    'optimism': {
+      network: 'optimism',
+      alchemyNetwork: 'opt-mainnet',
+      contractAddress: contractAddress,
+      chainId: 10,
+      rpcUrl: `https://opt-mainnet.g.alchemy.com/v2/${alchemyApiKey}`,
+      wsUrl: `wss://opt-mainnet.g.alchemy.com/v2/${alchemyApiKey}`
     }
   }
 
@@ -104,7 +112,7 @@ async function deployMonitoring(network: string, contractAddress: string, alchem
   }
 
   // Enregistrer la configuration du réseau
-  await supabase
+  const { error: insertError } = await supabase
     .from('alchemy_networks')
     .upsert({
       network: config.network,
@@ -118,6 +126,11 @@ async function deployMonitoring(network: string, contractAddress: string, alchem
     }, {
       onConflict: 'network,contract_address'
     })
+
+  if (insertError) {
+    console.error('Erreur insertion réseau:', insertError)
+    throw insertError
+  }
 
   // Synchroniser les données initiales
   await syncNetworkData(config, supabase)
@@ -160,7 +173,7 @@ async function syncNetworkData(config: AlchemyNodeConfig, supabase: any) {
     console.log(`Synchronisation de ${transfers.length} transactions pour ${config.network}`)
 
     for (const transfer of transfers) {
-      await supabase
+      const { error } = await supabase
         .from('blockchain_transactions')
         .upsert({
           transaction_hash: transfer.hash,
@@ -177,6 +190,10 @@ async function syncNetworkData(config: AlchemyNodeConfig, supabase: any) {
         }, {
           onConflict: 'transaction_hash'
         })
+
+      if (error) {
+        console.error('Erreur insertion transaction:', error)
+      }
     }
 
   } catch (error) {
@@ -185,25 +202,33 @@ async function syncNetworkData(config: AlchemyNodeConfig, supabase: any) {
 }
 
 async function syncAllNetworks(alchemyApiKey: string, supabase: any) {
-  const networks = ['sepolia', 'polygon', 'arbitrum', 'base']
+  const { data: networks, error } = await supabase
+    .from('alchemy_networks')
+    .select('*')
+    .eq('is_active', true)
+
+  if (error) {
+    throw error
+  }
+
   const results = []
 
-  for (const network of networks) {
+  for (const network of networks || []) {
     try {
-      const { data: networkConfig } = await supabase
-        .from('alchemy_networks')
-        .select('*')
-        .eq('network', network)
-        .eq('is_active', true)
-        .single()
-
-      if (networkConfig) {
-        await syncNetworkData(networkConfig, supabase)
-        results.push({ network, status: 'success' })
+      const config: AlchemyNodeConfig = {
+        network: network.network,
+        alchemyNetwork: network.alchemy_network,
+        contractAddress: network.contract_address,
+        chainId: network.chain_id,
+        rpcUrl: network.rpc_url,
+        wsUrl: network.ws_url
       }
+
+      await syncNetworkData(config, supabase)
+      results.push({ network: network.network, status: 'success' })
     } catch (error) {
-      console.error(`Erreur sync ${network}:`, error)
-      results.push({ network, status: 'error', error: error.message })
+      console.error(`Erreur sync ${network.network}:`, error)
+      results.push({ network: network.network, status: 'error', error: error.message })
     }
   }
 
@@ -222,7 +247,8 @@ async function getNetworkStatus(network: string, alchemyApiKey: string) {
     'sepolia': `https://eth-sepolia.g.alchemy.com/v2/${alchemyApiKey}`,
     'polygon': `https://polygon-mainnet.g.alchemy.com/v2/${alchemyApiKey}`,
     'arbitrum': `https://arb-mainnet.g.alchemy.com/v2/${alchemyApiKey}`,
-    'base': `https://base-mainnet.g.alchemy.com/v2/${alchemyApiKey}`
+    'base': `https://base-mainnet.g.alchemy.com/v2/${alchemyApiKey}`,
+    'optimism': `https://opt-mainnet.g.alchemy.com/v2/${alchemyApiKey}`
   }
 
   const rpcUrl = networkConfigs[network]
@@ -271,9 +297,7 @@ async function getNetworkStatus(network: string, alchemyApiKey: string) {
 async function setupWebhooks(network: string, contractAddress: string, alchemyApiKey: string) {
   console.log(`Configuration des webhooks pour ${network}:${contractAddress}`)
 
-  // Note: Dans un environnement réel, vous utiliseriez l'API Alchemy Notify
-  // pour configurer automatiquement les webhooks
-  
+  // Configuration webhook pour surveillance en temps réel
   const webhookConfig = {
     network: network,
     contractAddress: contractAddress,

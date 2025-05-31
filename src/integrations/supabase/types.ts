@@ -9,16 +9,93 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      alchemy_events: {
+        Row: {
+          created_at: string
+          event_data: Json
+          event_id: string
+          event_type: string
+          id: string
+          processed: boolean
+          processed_at: string | null
+          webhook_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_data: Json
+          event_id: string
+          event_type: string
+          id?: string
+          processed?: boolean
+          processed_at?: string | null
+          webhook_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_data?: Json
+          event_id?: string
+          event_type?: string
+          id?: string
+          processed?: boolean
+          processed_at?: string | null
+          webhook_id?: string | null
+        }
+        Relationships: []
+      }
+      alchemy_networks: {
+        Row: {
+          alchemy_network: string
+          chain_id: number
+          contract_address: string
+          created_at: string
+          id: string
+          is_active: boolean
+          monitoring_enabled: boolean
+          network: string
+          rpc_url: string
+          updated_at: string
+          ws_url: string
+        }
+        Insert: {
+          alchemy_network: string
+          chain_id: number
+          contract_address: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          monitoring_enabled?: boolean
+          network: string
+          rpc_url: string
+          updated_at?: string
+          ws_url: string
+        }
+        Update: {
+          alchemy_network?: string
+          chain_id?: number
+          contract_address?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          monitoring_enabled?: boolean
+          network?: string
+          rpc_url?: string
+          updated_at?: string
+          ws_url?: string
+        }
+        Relationships: []
+      }
       blockchain_transactions: {
         Row: {
           amount: number
           block_number: number | null
+          chain_id: number | null
           confirmed_at: string | null
           created_at: string
           from_address: string | null
           gas_price: number | null
           gas_used: number | null
           id: string
+          network: string | null
           network_fee: number | null
           status: Database["public"]["Enums"]["transaction_status"]
           to_address: string | null
@@ -30,12 +107,14 @@ export type Database = {
         Insert: {
           amount: number
           block_number?: number | null
+          chain_id?: number | null
           confirmed_at?: string | null
           created_at?: string
           from_address?: string | null
           gas_price?: number | null
           gas_used?: number | null
           id?: string
+          network?: string | null
           network_fee?: number | null
           status?: Database["public"]["Enums"]["transaction_status"]
           to_address?: string | null
@@ -47,12 +126,14 @@ export type Database = {
         Update: {
           amount?: number
           block_number?: number | null
+          chain_id?: number | null
           confirmed_at?: string | null
           created_at?: string
           from_address?: string | null
           gas_price?: number | null
           gas_used?: number | null
           id?: string
+          network?: string | null
           network_fee?: number | null
           status?: Database["public"]["Enums"]["transaction_status"]
           to_address?: string | null

@@ -21,14 +21,17 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 interface NetworkConfig {
+  id: string;
   network: string;
-  alchemyNetwork: string;
-  contractAddress: string;
-  chainId: number;
-  rpcUrl: string;
-  wsUrl: string;
-  isActive: boolean;
-  monitoringEnabled: boolean;
+  alchemy_network: string;
+  contract_address: string;
+  chain_id: number;
+  rpc_url: string;
+  ws_url: string;
+  is_active: boolean;
+  monitoring_enabled: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 interface NetworkStatus {
@@ -67,10 +70,19 @@ const NetworkManager = () => {
         .select('*')
         .order('network');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erreur lors du chargement des réseaux:', error);
+        throw error;
+      }
+      
       setNetworks(data || []);
     } catch (error) {
       console.error('Erreur lors du chargement des réseaux:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les réseaux",
+        variant: "destructive"
+      });
     }
   };
 
@@ -277,7 +289,7 @@ const NetworkManager = () => {
                 const networkInfo = SUPPORTED_NETWORKS.find(n => n.id === network.network);
                 
                 return (
-                  <Card key={network.network} className="bg-gray-800/50 p-4">
+                  <Card key={network.id} className="bg-gray-800/50 p-4">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center space-x-2">
                         <div className={`w-3 h-3 rounded-full ${networkInfo?.color || 'bg-gray-600'}`}></div>
@@ -293,7 +305,7 @@ const NetworkManager = () => {
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-gray-400">Chain ID:</span>
-                        <span className="text-white">{network.chainId}</span>
+                        <span className="text-white">{network.chain_id}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-400">Block:</span>
@@ -302,19 +314,19 @@ const NetworkManager = () => {
                       <div className="flex justify-between">
                         <span className="text-gray-400">Contrat:</span>
                         <span className="text-white font-mono text-xs">
-                          {network.contractAddress.slice(0, 8)}...
+                          {network.contract_address.slice(0, 8)}...
                         </span>
                       </div>
                     </div>
 
                     <div className="mt-3 flex space-x-2">
                       <Badge 
-                        className={network.isActive ? 'bg-green-600' : 'bg-gray-600'}
+                        className={network.is_active ? 'bg-green-600' : 'bg-gray-600'}
                       >
-                        {network.isActive ? 'Actif' : 'Inactif'}
+                        {network.is_active ? 'Actif' : 'Inactif'}
                       </Badge>
                       <Badge 
-                        className={network.monitoringEnabled ? 'bg-blue-600' : 'bg-gray-600'}
+                        className={network.monitoring_enabled ? 'bg-blue-600' : 'bg-gray-600'}
                       >
                         <Eye className="w-3 h-3 mr-1" />
                         Monitoring
@@ -332,14 +344,14 @@ const NetworkManager = () => {
                 const networkInfo = SUPPORTED_NETWORKS.find(n => n.id === network.network);
                 
                 return (
-                  <Card key={network.network} className="bg-gray-800/50 p-4">
+                  <Card key={network.id} className="bg-gray-800/50 p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <div className={`w-4 h-4 rounded-full ${networkInfo?.color || 'bg-gray-600'}`}></div>
                         <div>
                           <h4 className="font-medium text-white">{networkInfo?.name || network.network}</h4>
                           <p className="text-sm text-gray-400">
-                            Contrat: {network.contractAddress.slice(0, 12)}...
+                            Contrat: {network.contract_address.slice(0, 12)}...
                           </p>
                         </div>
                       </div>
@@ -347,7 +359,7 @@ const NetworkManager = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setupWebhooks(network.network, network.contractAddress)}
+                        onClick={() => setupWebhooks(network.network, network.contract_address)}
                         className="border-purple-600 text-purple-400 hover:bg-purple-600 hover:text-white"
                       >
                         <Webhook className="w-4 h-4 mr-2" />
