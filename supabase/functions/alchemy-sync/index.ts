@@ -20,145 +20,144 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const alchemyApiKey = Deno.env.get('ALCHEMY_API_KEY')
-    if (!alchemyApiKey) {
-      throw new Error('ALCHEMY_API_KEY not configured')
+    // Get Alchemy API key from secrets
+    const alchemyKey = Deno.env.get('ALCHEMY_API_KEY')
+    if (!alchemyKey) {
+      throw new Error('Alchemy API key not configured')
     }
 
-    // Use Alchemy's Enhanced APIs
-    const alchemyUrl = `https://eth-mainnet.g.alchemy.com/v2/${alchemyApiKey}`
+    // Ethereum Mainnet endpoint
+    const alchemyUrl = `https://eth-mainnet.g.alchemy.com/v2/${alchemyKey}`
 
-    // Sync token balances from blockchain
-    await syncTokenBalances(supabaseClient, walletAddress, userId, alchemyUrl)
+    console.log('Syncing wallet balances for:', walletAddress)
 
-    // Sync transaction history
-    await syncTransactionHistory(supabaseClient, walletAddress, userId, alchemyUrl)
+    // Mock token contract addresses (replace with real ones)
+    const tokenContracts = {
+      VEX: '0x1234567890abcdef1234567890abcdef12345678',
+      sVEX: '0xabcdef1234567890abcdef1234567890abcdef12',
+      gVEX: '0x9876543210fedcba9876543210fedcba98765432'
+    }
 
-    return new Response(
-      JSON.stringify({ success: true, message: 'Wallet synced successfully with Alchemy' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    // Sync each token balance
+    for (const [tokenType, contractAddress] of Object.entries(tokenContracts)) {
+      try {
+        // Call Alchemy to get token balance
+        const response = await fetch(alchemyUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            method: 'eth_call',
+            params: [
+              {
+                to: contractAddress,
+                data: `0x70a08231000000000000000000000000${walletAddress.slice(2)}`
+              },
+              'latest'
+            ],
+            id: 1
+          })
+        })
 
-  } catch (error) {
-    console.error('Error syncing wallet with Alchemy:', error)
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-    )
-  }
-})
+        const data = await response.json()
+        
+        // Convert hex to decimal (simplified)
+        const balanceHex = data.result || '0x0'
+        const balance = parseInt(balanceHex, 16) / Math.pow(10, 18) // Assuming 18 decimals
 
-async function syncTokenBalances(supabase: any, walletAddress: string, userId: string, alchemyUrl: string) {
-  const tokenContracts = {
-    'VEX': Deno.env.get('VEX_CONTRACT_ADDRESS'),
-    'sVEX': Deno.env.get('SVEX_CONTRACT_ADDRESS'),
-    'gVEX': Deno.env.get('GVEX_CONTRACT_ADDRESS')
-  }
+        console.log(`${tokenType} balance:`, balance)
 
-  // Get all token balances using Alchemy's getTokenBalances
-  try {
-    const response = await fetch(alchemyUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        id: 1,
-        jsonrpc: '2.0',
-        method: 'alchemy_getTokenBalances',
-        params: [walletAddress, Object.values(tokenContracts).filter(Boolean)]
-      })
-    })
-
-    if (response.ok) {
-      const data = await response.json()
-      const tokenBalances = data.result?.tokenBalances || []
-
-      for (const tokenBalance of tokenBalances) {
-        const contractAddress = tokenBalance.contractAddress.toLowerCase()
-        const balance = parseInt(tokenBalance.tokenBalance || '0', 16) / Math.pow(10, 18)
-
-        // Find token type by contract address
-        let tokenType = 'VEX'
-        for (const [type, address] of Object.entries(tokenContracts)) {
-          if (address && address.toLowerCase() === contractAddress) {
-            tokenType = type
-            break
-          }
-        }
-
-        await supabase
+        // Update balance in Supabase
+        await supabaseClient
           .from('token_balances')
           .upsert({
             user_id: userId,
             wallet_address: walletAddress,
             token_type: tokenType,
-            balance: balance
+            balance: balance,
+            updated_at: new Date().toISOString()
           }, {
             onConflict: 'user_id,token_type'
           })
 
-        console.log(`Synced ${tokenType} balance: ${balance} for ${walletAddress}`)
+      } catch (error) {
+        console.error(`Error syncing ${tokenType}:`, error)
       }
     }
-  } catch (error) {
-    console.error('Error syncing token balances with Alchemy:', error)
-  }
-}
 
-async function syncTransactionHistory(supabase: any, walletAddress: string, userId: string, alchemyUrl: string) {
-  try {
-    // Get asset transfers using Alchemy's getAssetTransfers
-    const response = await fetch(alchemyUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        id: 1,
-        jsonrpc: '2.0',
-        method: 'alchemy_getAssetTransfers',
-        params: [{
-          fromBlock: '0x0',
-          toBlock: 'latest',
-          fromAddress: walletAddress,
-          toAddress: walletAddress,
-          category: ['erc20', 'external'],
-          withMetadata: true,
-          excludeZeroValue: true,
-          maxCount: '0x32' // 50 transactions
-        }]
+    // Get recent transactions using Alchemy
+    try {
+      const txResponse = await fetch(alchemyUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          method: 'alchemy_getAssetTransfers',
+          params: [
+            {
+              fromAddress: walletAddress,
+              category: ['erc20'],
+              maxCount: 10,
+              order: 'desc'
+            }
+          ],
+          id: 1
+        })
       })
-    })
 
-    if (response.ok) {
-      const data = await response.json()
-      const transfers = data.result?.transfers || []
-      
+      const txData = await txResponse.json()
+      const transfers = txData.result?.transfers || []
+
+      // Store transactions in database
       for (const transfer of transfers) {
-        const isOutgoing = transfer.from.toLowerCase() === walletAddress.toLowerCase()
-        
-        await supabase
-          .from('blockchain_transactions')
-          .upsert({
-            transaction_hash: transfer.hash,
-            user_id: userId,
-            from_address: transfer.from,
-            to_address: transfer.to,
-            token_type: transfer.asset || 'VEX',
-            amount: parseFloat(transfer.value || '0'),
-            transaction_type: 'transfer',
-            status: 'confirmed',
-            block_number: parseInt(transfer.blockNum, 16),
-            confirmed_at: new Date().toISOString()
-          }, {
-            onConflict: 'transaction_hash'
-          })
+        const tokenType = Object.keys(tokenContracts).find(
+          type => tokenContracts[type].toLowerCase() === transfer.rawContract?.address?.toLowerCase()
+        )
+
+        if (tokenType) {
+          await supabaseClient
+            .from('blockchain_transactions')
+            .upsert({
+              user_id: userId,
+              transaction_hash: transfer.hash,
+              transaction_type: 'transfer',
+              token_type: tokenType,
+              amount: parseFloat(transfer.value || '0'),
+              from_address: transfer.from,
+              to_address: transfer.to,
+              status: 'confirmed',
+              block_number: parseInt(transfer.blockNum, 16),
+              created_at: new Date().toISOString()
+            }, {
+              onConflict: 'transaction_hash'
+            })
+        }
       }
 
-      console.log(`Synced ${transfers.length} transactions for ${walletAddress}`)
+    } catch (error) {
+      console.error('Error syncing transactions:', error)
     }
+
+    return new Response(
+      JSON.stringify({ success: true, message: 'Wallet synced successfully' }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200 
+      }
+    )
+
   } catch (error) {
-    console.error('Error syncing transaction history with Alchemy:', error)
+    console.error('Error in alchemy-sync:', error)
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400 
+      }
+    )
   }
-}
+})
