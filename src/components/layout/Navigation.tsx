@@ -18,14 +18,14 @@ const Navigation = () => {
   const isActive = (href: string) => location.pathname === href;
 
   return (
-    <nav className="fixed top-0 w-full z-50 bg-gray-900/80 backdrop-blur-lg border-b border-gray-800">
+    <nav className="fixed top-0 w-full z-50 veegox-glass border-b border-white/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">V</span>
+        <div className="flex items-center justify-between h-20">
+          <Link to="/" className="flex items-center space-x-3 group">
+            <div className="w-12 h-12 veegox-gradient-primary rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <span className="text-white font-bold text-xl">V</span>
             </div>
-            <span className="text-white text-xl font-bold">VEEGOX</span>
+            <span className="text-white text-2xl font-bold tracking-tight">VEEGOX</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -34,22 +34,25 @@ const Navigation = () => {
               <Link
                 key={item.label}
                 to={item.href}
-                className={`text-sm font-medium transition-colors hover:text-purple-400 ${
-                  isActive(item.href) ? 'text-purple-400' : 'text-gray-300'
+                className={`text-sm font-semibold transition-all duration-300 hover:text-white relative group ${
+                  isActive(item.href) ? 'text-white' : 'text-gray-300'
                 }`}
               >
                 {item.label}
+                <span className={`absolute -bottom-1 left-0 w-0 h-0.5 veegox-gradient-primary transition-all duration-300 group-hover:w-full ${
+                  isActive(item.href) ? 'w-full' : ''
+                }`} />
               </Link>
             ))}
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
             <Link to="/dashboard">
-              <Button variant="outline" className="border-purple-500 text-purple-400 hover:bg-purple-500 hover:text-white">
+              <Button className="veegox-button-secondary">
                 Dashboard
               </Button>
             </Link>
-            <Button className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
+            <Button className="veegox-button-primary">
               Connect Wallet
             </Button>
           </div>
@@ -60,35 +63,36 @@ const Navigation = () => {
               variant="ghost"
               size="sm"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="text-white hover:bg-white/10"
             >
-              {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
+              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </Button>
           </div>
         </div>
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden py-4 border-t border-gray-800">
+          <div className="md:hidden py-6 border-t border-white/10">
             <div className="flex flex-col space-y-4">
               {navItems.map((item) => (
                 <Link
                   key={item.label}
                   to={item.href}
-                  className={`text-sm font-medium transition-colors hover:text-purple-400 ${
-                    isActive(item.href) ? 'text-purple-400' : 'text-gray-300'
+                  className={`text-lg font-semibold transition-colors hover:text-white ${
+                    isActive(item.href) ? 'text-white' : 'text-gray-300'
                   }`}
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {item.label}
                 </Link>
               ))}
-              <div className="flex flex-col space-y-2 pt-4">
+              <div className="flex flex-col space-y-3 pt-4">
                 <Link to="/dashboard">
-                  <Button variant="outline" className="w-full border-purple-500 text-purple-400">
+                  <Button className="w-full veegox-button-secondary">
                     Dashboard
                   </Button>
                 </Link>
-                <Button className="w-full bg-gradient-to-r from-purple-600 to-blue-600">
+                <Button className="w-full veegox-button-primary">
                   Connect Wallet
                 </Button>
               </div>
