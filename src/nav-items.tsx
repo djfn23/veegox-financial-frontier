@@ -1,4 +1,3 @@
-
 import {
   HomeIcon,
   BarChart3,
@@ -16,7 +15,8 @@ import {
   HelpCircle,
   ShieldCheck,
   Link2,
-  Settings
+  Settings,
+  ArrowLeftRight
 } from "lucide-react";
 
 export const navItems = [
@@ -113,5 +113,15 @@ export const navItems = [
     title: "Sécurité",
     to: "/security",
     icon: <ShieldCheck className="h-4 w-4" />,
+  },
+  {
+    title: "DEX",
+    to: "/dex",
+    icon: <ArrowLeftRight className="h-4 w-4" />,
+  },
+  {
+    title: "Authentification", 
+    to: "/auth",
+    icon: <Shield className="h-4 w-4" />,
   },
 ];

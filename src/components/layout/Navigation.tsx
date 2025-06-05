@@ -1,111 +1,97 @@
-
-import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Menu, X } from 'lucide-react';
+import { useAuth } from '@/components/auth/AuthProvider';
+import { navItems } from '@/nav-items';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
+import { Menu } from "lucide-react"
 
 const Navigation = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const location = useLocation();
-
-  const navItems = [
-    { label: 'Products', href: '/products' },
-    { label: 'Tokens', href: '/tokens' },
-    { label: 'VeegoxChain', href: '/veegoxchain' },
-    { label: 'Governance', href: '/governance' },
-    { label: 'Blog', href: '/blog' },
-  ];
-
-  const isActive = (href: string) => location.pathname === href;
+  const { user, signOut } = useAuth();
 
   return (
-    <nav className="fixed top-0 w-full z-50 veegox-glass border-b border-white/10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-20">
-          <Link to="/" className="flex items-center space-x-2 sm:space-x-3 group">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 veegox-gradient-primary rounded-xl sm:rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-              <span className="text-white font-bold text-lg sm:text-xl">V</span>
-            </div>
-            <span className="text-white text-xl sm:text-2xl font-bold tracking-tight hidden xs:block">VEEGOX</span>
+    <header className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-sm border-b border-gray-800">
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo */}
+          <Link to="/" className="text-white font-bold text-xl">
+            VeegoxChain
           </Link>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-6 lg:space-x-8">
+          
+          {/* Main Navigation */}
+          <div className="hidden md:flex space-x-4">
             {navItems.map((item) => (
-              <Link
-                key={item.label}
-                to={item.href}
-                className={`text-sm font-semibold transition-all duration-300 hover:text-white relative group ${
-                  isActive(item.href) ? 'text-white' : 'text-gray-300'
-                }`}
-              >
-                {item.label}
-                <span className={`absolute -bottom-1 left-0 w-0 h-0.5 veegox-gradient-primary transition-all duration-300 group-hover:w-full ${
-                  isActive(item.href) ? 'w-full' : ''
-                }`} />
+              <Link key={item.title} to={item.to} className="text-gray-300 hover:text-white">
+                <div className="flex items-center">
+                  {item.icon}
+                  <span className="ml-2">{item.title}</span>
+                </div>
               </Link>
             ))}
           </div>
-
-          <div className="hidden md:flex items-center space-x-3 lg:space-x-4">
-            <Link to="/dashboard">
-              <Button className="veegox-button-secondary text-sm">
-                Dashboard
-              </Button>
-            </Link>
-            <Link to="/veegoxchain/admin">
-              <Button className="veegox-button-primary text-sm">
-                VeegoxChain Admin
-              </Button>
-            </Link>
-          </div>
-
-          {/* Mobile menu button */}
-          <div className="md:hidden">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-white hover:bg-white/10 p-2"
-            >
-              {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
-            </Button>
+          
+          {/* Mobile Navigation */}
+          <Sheet>
+            <SheetTrigger className="md:hidden">
+              <Menu className="h-6 w-6 text-white" />
+            </SheetTrigger>
+            <SheetContent side="left" className="bg-gray-900 text-white">
+              <SheetHeader>
+                <SheetTitle>VeegoxChain</SheetTitle>
+                <SheetDescription>
+                  Navigation
+                </SheetDescription>
+              </SheetHeader>
+              <div className="py-4">
+                {navItems.map((item) => (
+                  <Link key={item.title} to={item.to} className="block py-2 text-gray-300 hover:text-white">
+                    <div className="flex items-center">
+                      {item.icon}
+                      <span className="ml-2">{item.title}</span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </SheetContent>
+          </Sheet>
+          
+          {/* User Menu */}
+          <div className="flex items-center space-x-4">
+            {user ? (
+              <div className="flex items-center space-x-3">
+                <span className="text-sm text-gray-400">
+                  {user.email}
+                </span>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={signOut}
+                  className="border-gray-600 hover:bg-gray-700"
+                >
+                  Déconnexion
+                </Button>
+              </div>
+            ) : (
+              <Link to="/auth">
+                <Button 
+                  size="sm" 
+                  className="bg-purple-600 hover:bg-purple-700"
+                >
+                  Se connecter
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
-
-        {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <div className="md:hidden py-4 sm:py-6 border-t border-white/10 animate-fade-in-up">
-            <div className="flex flex-col space-y-3 sm:space-y-4">
-              {navItems.map((item) => (
-                <Link
-                  key={item.label}
-                  to={item.href}
-                  className={`text-base sm:text-lg font-semibold transition-colors hover:text-white px-2 py-1 ${
-                    isActive(item.href) ? 'text-white' : 'text-gray-300'
-                  }`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {item.label}
-                </Link>
-              ))}
-              <div className="flex flex-col space-y-3 pt-4 border-t border-white/10">
-                <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>
-                  <Button className="w-full veegox-button-secondary">
-                    Dashboard
-                  </Button>
-                </Link>
-                <Link to="/veegoxchain/admin" onClick={() => setIsMenuOpen(false)}>
-                  <Button className="w-full veegox-button-primary">
-                    VeegoxChain Admin
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </nav>
+      </nav>
+    </header>
   );
 };
 
