@@ -24,126 +24,112 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    console.log('Looking up transaction:', transactionHash)
+    const alchemyApiKey = Deno.env.get('ALCHEMY_API_KEY')
+    if (!alchemyApiKey) {
+      throw new Error('ALCHEMY_API_KEY not configured')
+    }
 
-    // First, check local database
-    const { data: localTx, error: localError } = await supabaseClient
+    console.log(`Recherche de la transaction: ${transactionHash}`)
+
+    // Chercher d'abord dans notre base de données
+    const { data: localTransaction, error: localError } = await supabaseClient
       .from('blockchain_transactions')
       .select('*')
       .eq('transaction_hash', transactionHash)
       .single()
 
-    if (localTx && !localError) {
-      console.log('Transaction found in local database')
+    if (localTransaction) {
+      console.log('Transaction trouvée dans la base de données locale')
       return new Response(
-        JSON.stringify({
-          found: true,
+        JSON.stringify({ 
+          found: true, 
           source: 'local',
-          transaction: localTx
+          transaction: localTransaction 
         }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200 
-        }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // If not found locally, check blockchain via Alchemy
-    const alchemyKey = Deno.env.get('ALCHEMY_API_KEY')
-    if (!alchemyKey) {
-      throw new Error('Alchemy API key not configured')
-    }
-
-    const alchemyUrl = `https://eth-mainnet.g.alchemy.com/v2/${alchemyKey}`
-
-    console.log('Checking blockchain via Alchemy...')
-
+    // Si non trouvée localement, chercher sur la blockchain via Alchemy
+    console.log('Transaction non trouvée localement, recherche sur la blockchain...')
+    
+    const alchemyUrl = `https://eth-mainnet.g.alchemy.com/v2/${alchemyApiKey}`
+    
     const response = await fetch(alchemyUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        id: 1,
         jsonrpc: '2.0',
         method: 'eth_getTransactionByHash',
-        params: [transactionHash],
-        id: 1
+        params: [transactionHash]
       })
     })
 
-    const data = await response.json()
-
-    if (data.result) {
-      console.log('Transaction found on blockchain')
+    const blockchainData = await response.json()
+    
+    if (blockchainData.result) {
+      console.log('Transaction trouvée sur la blockchain')
       
-      // Get transaction receipt for more details
-      const receiptResponse = await fetch(alchemyUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          jsonrpc: '2.0',
-          method: 'eth_getTransactionReceipt',
-          params: [transactionHash],
-          id: 1
-        })
-      })
-
-      const receiptData = await receiptResponse.json()
-      const receipt = receiptData.result
-
-      // Convert blockchain data to our format
-      const transaction = {
+      // Sauvegarder la transaction dans notre base de données
+      const transactionData = {
         transaction_hash: transactionHash,
-        from_address: data.result.from,
-        to_address: data.result.to,
-        amount: parseInt(data.result.value, 16) / Math.pow(10, 18), // Convert wei to ETH
-        token_type: 'ETH', // Default to ETH for now
-        status: receipt?.status === '0x1' ? 'confirmed' : 'failed',
-        block_number: parseInt(data.result.blockNumber, 16),
+        from_address: blockchainData.result.from,
+        to_address: blockchainData.result.to,
+        block_number: parseInt(blockchainData.result.blockNumber, 16),
+        gas_used: parseInt(blockchainData.result.gas, 16),
+        gas_price: parseInt(blockchainData.result.gasPrice, 16),
+        amount: parseFloat(blockchainData.result.value) / Math.pow(10, 18), // Convert wei to ETH
+        token_type: 'VEX', // Default, might need to be determined from contract interaction
         transaction_type: 'transfer',
+        status: blockchainData.result.blockNumber ? 'confirmed' : 'pending',
         confirmed_at: new Date().toISOString()
       }
 
+      const { error: insertError } = await supabaseClient
+        .from('blockchain_transactions')
+        .insert(transactionData)
+
+      if (insertError) {
+        console.error('Erreur lors de la sauvegarde:', insertError)
+      }
+
       return new Response(
-        JSON.stringify({
-          found: true,
+        JSON.stringify({ 
+          found: true, 
           source: 'blockchain',
-          transaction: transaction,
-          raw: data.result
+          transaction: transactionData,
+          raw: blockchainData.result
         }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200 
-        }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // Transaction not found anywhere
-    console.log('Transaction not found')
+    console.log('Transaction introuvable')
     return new Response(
-      JSON.stringify({
-        found: false,
-        error: 'Transaction not found in database or blockchain'
+      JSON.stringify({ 
+        found: false, 
+        message: 'Transaction not found in database or blockchain',
+        searched: {
+          database: true,
+          blockchain: true,
+          transactionHash: transactionHash
+        }
       }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200 
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
   } catch (error) {
-    console.error('Error in transaction-lookup:', error)
+    console.error('Erreur lors de la recherche de transaction:', error)
     return new Response(
       JSON.stringify({ 
         found: false,
-        error: error.message 
+        error: error.message,
+        transactionHash: transactionHash || 'unknown'
       }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400 
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
     )
   }
 })

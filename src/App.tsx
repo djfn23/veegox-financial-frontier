@@ -5,13 +5,21 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
+import Dashboard from "./pages/Dashboard";
+import Products from "./pages/Products";
 import Tokens from "./pages/Tokens";
 import Governance from "./pages/Governance";
+import Blog from "./pages/Blog";
+import Lending from "./pages/Lending";
 import Staking from "./pages/Staking";
-import CrowdfundingPage from "./pages/Crowdfunding";
-import VeegoxChainLauncherPage from "./pages/VeegoxChainLauncher";
-import VeegoxChainDeployPage from "./pages/VeegoxChainDeploy";
-import BlockchainNetworks from "./pages/BlockchainNetworks";
+import Savings from "./pages/Savings";
+import Investing from "./pages/Investing";
+import About from "./pages/About";
+import Help from "./pages/Help";
+import Analytics from "./pages/Analytics";
+import Security from "./pages/Security";
+import Blockchain from "./pages/Blockchain";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
@@ -23,13 +31,22 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/products" element={<Products />} />
           <Route path="/tokens" element={<Tokens />} />
           <Route path="/governance" element={<Governance />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/lending" element={<Lending />} />
           <Route path="/staking" element={<Staking />} />
-          <Route path="/crowdfunding" element={<CrowdfundingPage />} />
-          <Route path="/veegox-chain-launcher" element={<VeegoxChainLauncherPage />} />
-          <Route path="/veegox-chain-deploy" element={<VeegoxChainDeployPage />} />
-          <Route path="/blockchain-networks" element={<BlockchainNetworks />} />
+          <Route path="/savings" element={<Savings />} />
+          <Route path="/investing" element={<Investing />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/help" element={<Help />} />
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/security" element={<Security />} />
+          <Route path="/blockchain" element={<Blockchain />} />
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

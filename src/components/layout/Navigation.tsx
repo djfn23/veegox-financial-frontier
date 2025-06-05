@@ -1,84 +1,101 @@
 
 import React, { useState } from 'react';
-import { Menu, X, Coins, Vote, Layers, DollarSign, Rocket, Network, Server } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Menu, X } from 'lucide-react';
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const location = useLocation();
 
   const navItems = [
-    { name: 'Tokens', href: '/tokens', icon: Coins },
-    { name: 'Gouvernance', href: '/governance', icon: Vote },
-    { name: 'Staking', href: '/staking', icon: Layers },
-    { name: 'Crowdfunding', href: '/crowdfunding', icon: DollarSign },
-    { name: 'VeegoxChain', href: '/veegox-chain-launcher', icon: Rocket },
-    { name: 'Déployer', href: '/veegox-chain-deploy', icon: Server },
-    { name: 'Réseaux', href: '/blockchain-networks', icon: Network },
+    { label: 'Products', href: '/products' },
+    { label: 'Tokens', href: '/tokens' },
+    { label: 'Governance', href: '/governance' },
+    { label: 'Blog', href: '/blog' },
   ];
 
+  const isActive = (href: string) => location.pathname === href;
+
   return (
-    <nav className="fixed w-full z-50 top-0 bg-gray-900/80 backdrop-blur-md border-b border-gray-800">
+    <nav className="fixed top-0 w-full z-50 bg-gray-900/80 backdrop-blur-lg border-b border-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <a href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg"></div>
-              <span className="text-xl font-bold gradient-text">VeegoxDeFi</span>
-            </a>
-          </div>
+        <div className="flex items-center justify-between h-16">
+          <Link to="/" className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">V</span>
+            </div>
+            <span className="text-white text-xl font-bold">VEEGOX</span>
+          </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <a
-                  key={item.name}
-                  href={item.href}
-                  className="flex items-center space-x-1 text-gray-300 hover:text-white transition-colors"
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{item.name}</span>
-                </a>
-              );
-            })}
+            {navItems.map((item) => (
+              <Link
+                key={item.label}
+                to={item.href}
+                className={`text-sm font-medium transition-colors hover:text-purple-400 ${
+                  isActive(item.href) ? 'text-purple-400' : 'text-gray-300'
+                }`}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+
+          <div className="hidden md:flex items-center space-x-4">
+            <Link to="/dashboard">
+              <Button variant="outline" className="border-purple-500 text-purple-400 hover:bg-purple-500 hover:text-white">
+                Dashboard
+              </Button>
+            </Link>
+            <Button className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
+              Connect Wallet
+            </Button>
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
+          <div className="md:hidden">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-gray-300 hover:text-white"
             >
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </Button>
           </div>
         </div>
-      </div>
 
-      {/* Mobile Navigation */}
-      {isMenuOpen && (
-        <div className="md:hidden">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-gray-900 border-b border-gray-800">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <a
-                  key={item.name}
-                  href={item.href}
-                  className="flex items-center space-x-2 text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium transition-colors"
+        {/* Mobile Navigation */}
+        {isMenuOpen && (
+          <div className="md:hidden py-4 border-t border-gray-800">
+            <div className="flex flex-col space-y-4">
+              {navItems.map((item) => (
+                <Link
+                  key={item.label}
+                  to={item.href}
+                  className={`text-sm font-medium transition-colors hover:text-purple-400 ${
+                    isActive(item.href) ? 'text-purple-400' : 'text-gray-300'
+                  }`}
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  <Icon className="w-4 h-4" />
-                  <span>{item.name}</span>
-                </a>
-              );
-            })}
+                  {item.label}
+                </Link>
+              ))}
+              <div className="flex flex-col space-y-2 pt-4">
+                <Link to="/dashboard">
+                  <Button variant="outline" className="w-full border-purple-500 text-purple-400">
+                    Dashboard
+                  </Button>
+                </Link>
+                <Button className="w-full bg-gradient-to-r from-purple-600 to-blue-600">
+                  Connect Wallet
+                </Button>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </nav>
   );
 };

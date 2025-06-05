@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -18,18 +17,7 @@ export default {
 				'2xl': '1400px'
 			}
 		},
-		screens: {
-			'xs': '320px',
-			'sm': '640px',
-			'md': '768px',
-			'lg': '1024px',
-			'xl': '1280px',
-			'2xl': '1536px',
-		},
 		extend: {
-			fontFamily: {
-				'inter': ['Inter', 'sans-serif'],
-			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
@@ -73,13 +61,6 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				},
-				veegox: {
-					'blue': 'hsl(var(--veegox-blue))',
-					'purple': 'hsl(var(--veegox-purple))',
-					'cyan': 'hsl(var(--veegox-cyan))',
-					'dark': 'hsl(var(--veegox-dark))',
-					'darker': 'hsl(var(--veegox-darker))',
 				}
 			},
 			borderRadius: {
@@ -103,35 +84,11 @@ export default {
 					to: {
 						height: '0'
 					}
-				},
-				'float': {
-					'0%, 100%': { transform: 'translateY(0px)' },
-					'50%': { transform: 'translateY(-20px)' }
-				},
-				'glow': {
-					'0%, 100%': { boxShadow: '0 0 20px rgba(139, 92, 246, 0.3)' },
-					'50%': { boxShadow: '0 0 40px rgba(139, 92, 246, 0.6)' }
-				},
-				'slide-in': {
-					'0%': { opacity: '0', transform: 'translateY(20px)' },
-					'100%': { opacity: '1', transform: 'translateY(0)' }
-				},
-				'fade-in-up': {
-					'0%': { opacity: '0', transform: 'translateY(30px)' },
-					'100%': { opacity: '1', transform: 'translateY(0)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out',
-				'float': 'float 6s ease-in-out infinite',
-				'glow': 'glow 2s ease-in-out infinite',
-				'slide-in': 'slide-in 0.6s ease-out',
-				'fade-in-up': 'fade-in-up 0.8s ease-out'
-			},
-			spacing: {
-				'18': '4.5rem',
-				'88': '22rem',
+				'accordion-up': 'accordion-up 0.2s ease-out'
 			}
 		}
 	},
