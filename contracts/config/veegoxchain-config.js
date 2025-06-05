@@ -10,7 +10,7 @@ const VEEGOXCHAIN_CONFIG = {
   blockTime: 3, // 3 secondes
   gasLimit: "30000000",
   initialValidators: 3,
-  stakingRequirement: ethers.utils.parseEther("10000") // 10,000 VGX minimum pour être validateur
+  stakingRequirement: ethers.parseEther("10000") // 10,000 VGX minimum pour être validateur
 };
 
 module.exports = { VEEGOXCHAIN_CONFIG };

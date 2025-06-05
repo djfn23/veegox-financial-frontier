@@ -36,7 +36,7 @@ class DeploymentReporter {
     console.log("\n🔍 Commandes de vérification:");
     console.log(`npx hardhat verify --network ${networkInfo.name} ${this.deploymentInfo.contracts.consensus.address} "${this.config.stakingRequirement}" ${this.config.blockTime}`);
     console.log(`npx hardhat verify --network ${networkInfo.name} ${this.deploymentInfo.contracts.validator.address} "${this.deploymentInfo.contracts.consensus.address}" "${this.config.stakingRequirement}"`);
-    console.log(`npx hardhat verify --network ${networkInfo.name} ${this.deploymentInfo.contracts.nativeToken.address} "VeegoxChain Token" "VGX" "${ethers.utils.parseEther("1000000000")}"`);
+    console.log(`npx hardhat verify --network ${networkInfo.name} ${this.deploymentInfo.contracts.nativeToken.address} "VeegoxChain Token" "VGX" "${ethers.parseEther("1000000000")}"`);
   }
 
   printFullReport() {
