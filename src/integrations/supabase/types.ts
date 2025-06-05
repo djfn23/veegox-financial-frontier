@@ -969,10 +969,9 @@ export type Database = {
         Returns: number
       }
       has_role: {
-        Args: {
-          _user_id: string
-          _role: Database["public"]["Enums"]["app_role"]
-        }
+        Args:
+          | { _user_id: string; _role: Database["public"]["Enums"]["app_role"] }
+          | { role_name: string }
         Returns: boolean
       }
       time_until_next_claim: {
@@ -980,13 +979,15 @@ export type Database = {
         Returns: unknown
       }
       update_token_balance: {
-        Args: {
-          p_user_id: string
-          p_wallet_address: string
-          p_token_type: Database["public"]["Enums"]["token_type"]
-          p_amount: number
-          p_operation: string
-        }
+        Args:
+          | Record<PropertyKey, never>
+          | {
+              p_user_id: string
+              p_wallet_address: string
+              p_token_type: Database["public"]["Enums"]["token_type"]
+              p_amount: number
+              p_operation: string
+            }
         Returns: undefined
       }
     }

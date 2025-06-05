@@ -27,8 +27,8 @@ async function launchVeegoxChain() {
     const currentDir = process.cwd();
     console.log("📍 Répertoire actuel:", currentDir);
 
-    // 1. Installation des dépendances
-    if (!runCommand('npm install', 'Installation des dépendances')) {
+    // 1. Installation des dépendances avec --legacy-peer-deps
+    if (!runCommand('npm install --legacy-peer-deps', 'Installation des dépendances')) {
       process.exit(1);
     }
 
