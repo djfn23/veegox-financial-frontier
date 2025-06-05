@@ -15,6 +15,7 @@
     "deploy:veegoxchain": "hardhat run scripts/deploy-veegoxchain.js --network hardhat",
     "deploy:veegoxchain:sepolia": "hardhat run scripts/deploy-veegoxchain.js --network sepolia",
     "deploy:veegoxchain:mainnet": "hardhat run scripts/deploy-veegoxchain.js --network mainnet",
+    "launch:veegoxchain": "node scripts/launch-veegoxchain.js",
     "deploy:multi-network": "hardhat run scripts/deploy-multi-network.js",
     "verify:sepolia": "hardhat verify --network sepolia",
     "verify:mainnet": "hardhat verify --network mainnet",
