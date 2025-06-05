@@ -16,8 +16,26 @@ interface VeegoxChainConfig {
   explorerUrl: string;
   consensus: 'PoS' | 'PoA';
   blockTime: number;
-  gasLimit: bigint;
+  gasLimit: string;
   validators: string[];
+}
+
+// Helper function to convert BigInt to string for JSON serialization
+function serializeBigInt(obj: any): any {
+  if (typeof obj === 'bigint') {
+    return obj.toString()
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(serializeBigInt)
+  }
+  if (obj !== null && typeof obj === 'object') {
+    const result: any = {}
+    for (const key in obj) {
+      result[key] = serializeBigInt(obj[key])
+    }
+    return result
+  }
+  return obj
 }
 
 serve(async (req) => {
@@ -70,7 +88,6 @@ serve(async (req) => {
 async function deployVeegoxChain(config: VeegoxChainConfig, alchemyApiKey: string, supabase: any) {
   console.log('Déploiement de VeegoxChain...')
 
-  // Créer la configuration de la chaîne personnalisée avec Alchemy
   const chainConfig = {
     name: config.name,
     chain_id: config.chainId,
@@ -85,7 +102,6 @@ async function deployVeegoxChain(config: VeegoxChainConfig, alchemyApiKey: strin
     is_testnet: false
   }
 
-  // Enregistrer la configuration VeegoxChain
   const { error: chainError } = await supabase
     .from('veegoxchain_config')
     .upsert(chainConfig, {
@@ -97,7 +113,6 @@ async function deployVeegoxChain(config: VeegoxChainConfig, alchemyApiKey: strin
     throw chainError
   }
 
-  // Initialiser les nœuds Alchemy pour VeegoxChain
   const initialNodes = [
     {
       node_id: 'veegox-mainnet-01',
@@ -143,7 +158,6 @@ async function deployVeegoxChain(config: VeegoxChainConfig, alchemyApiKey: strin
     }
   }
 
-  // Créer le bloc Genesis
   await createGenesisBlock(config.chainId, supabase)
 
   return new Response(
@@ -190,7 +204,6 @@ async function getNodesStatus(alchemyApiKey: string, supabase: any) {
 
     if (error) throw error
 
-    // Simuler la mise à jour du statut des nœuds
     const updatedNodes = nodes?.map(node => ({
       id: node.node_id,
       address: node.address,
@@ -233,16 +246,16 @@ async function getLatestBlocks(alchemyApiKey: string, supabase: any) {
       hash: block.block_hash,
       parentHash: block.parent_hash,
       timestamp: block.timestamp,
-      transactions: [], // À implémenter
+      transactions: [],
       validator: block.validator,
-      gasUsed: BigInt(block.gas_used),
-      gasLimit: BigInt(block.gas_limit)
+      gasUsed: block.gas_used.toString(),
+      gasLimit: block.gas_limit.toString()
     })) || []
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        blocks: formattedBlocks
+        blocks: serializeBigInt(formattedBlocks)
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
@@ -267,7 +280,7 @@ async function getValidators(supabase: any) {
 
     const formattedValidators = validators?.map(validator => ({
       address: validator.validator_address,
-      stake: BigInt(validator.stake),
+      stake: validator.stake,
       commissionRate: validator.commission_rate,
       isActive: validator.is_active,
       delegators: validator.delegators || 0,
@@ -277,7 +290,7 @@ async function getValidators(supabase: any) {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        validators: formattedValidators
+        validators: serializeBigInt(formattedValidators)
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
@@ -296,7 +309,7 @@ async function addValidator(address: string, stake: string, supabase: any) {
     const validator = {
       validator_address: address,
       stake: stake,
-      commission_rate: 5.0, // 5% par défaut
+      commission_rate: 5.0,
       is_active: true,
       delegators: 0,
       uptime: 100.0
