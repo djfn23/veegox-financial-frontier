@@ -11,6 +11,7 @@ const Navigation = () => {
   const navItems = [
     { label: 'Products', href: '/products' },
     { label: 'Tokens', href: '/tokens' },
+    { label: 'VeegoxChain', href: '/veegoxchain' },
     { label: 'Governance', href: '/governance' },
     { label: 'Blog', href: '/blog' },
   ];
@@ -52,9 +53,11 @@ const Navigation = () => {
                 Dashboard
               </Button>
             </Link>
-            <Button className="veegox-button-primary text-sm">
-              Connect Wallet
-            </Button>
+            <Link to="/veegoxchain/admin">
+              <Button className="veegox-button-primary text-sm">
+                VeegoxChain Admin
+              </Button>
+            </Link>
           </div>
 
           {/* Mobile menu button */}
@@ -92,9 +95,11 @@ const Navigation = () => {
                     Dashboard
                   </Button>
                 </Link>
-                <Button className="w-full veegox-button-primary">
-                  Connect Wallet
-                </Button>
+                <Link to="/veegoxchain/admin" onClick={() => setIsMenuOpen(false)}>
+                  <Button className="w-full veegox-button-primary">
+                    VeegoxChain Admin
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>

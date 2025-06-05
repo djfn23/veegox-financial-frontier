@@ -15,7 +15,8 @@ import {
   BookOpen,
   HelpCircle,
   ShieldCheck,
-  Link2
+  Link2,
+  Settings
 } from "lucide-react";
 
 export const navItems = [
@@ -43,6 +44,11 @@ export const navItems = [
         title: "VeegoxChain",
         to: "/veegoxchain",
         icon: <Network className="h-4 w-4" />,
+      },
+      {
+        title: "Admin VeegoxChain",
+        to: "/veegoxchain/admin",
+        icon: <Settings className="h-4 w-4" />,
       }
     ]
   },

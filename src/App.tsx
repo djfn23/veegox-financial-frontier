@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Blockchain from "./pages/Blockchain";
 import BlockchainNetworks from "./pages/BlockchainNetworks";
 import VeegoxChainPage from "./pages/VeegoxChain";
+import VeegoxChainAdmin from "./pages/VeegoxChainAdmin";
 import Tokens from "./pages/Tokens";
 import Staking from "./pages/Staking";
 import Governance from "./pages/Governance";
@@ -38,6 +39,7 @@ const App = () => (
           <Route path="/blockchain" element={<Blockchain />} />
           <Route path="/blockchain-networks" element={<BlockchainNetworks />} />
           <Route path="/veegoxchain" element={<VeegoxChainPage />} />
+          <Route path="/veegoxchain/admin" element={<VeegoxChainAdmin />} />
           <Route path="/tokens" element={<Tokens />} />
           <Route path="/staking" element={<Staking />} />
           <Route path="/governance" element={<Governance />} />
