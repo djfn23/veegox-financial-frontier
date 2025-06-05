@@ -1,17 +1,15 @@
 
 const { ethers } = require("hardhat");
-const { VEEGOXCHAIN_CONFIG } = require("../config/veegoxchain-config");
-const { ContractDeployer } = require("../utils/contract-deployer");
-const { FileGenerator } = require("../utils/file-generator");
-const { DeploymentReporter } = require("../utils/deployment-reporter");
 
 async function deployVeegoxChain() {
-  const [deployer] = await ethers.getSigners();
-  
   console.log("🚀 Déploiement de VeegoxChain");
   console.log("=".repeat(50));
+
+  const [deployer] = await ethers.getSigners();
   console.log("Déployeur:", deployer.address);
-  console.log("Réseau:", await ethers.provider.getNetwork());
+
+  const network = await ethers.provider.getNetwork();
+  console.log("Réseau:", network.name, "Chain ID:", network.chainId);
   
   const balance = await ethers.provider.getBalance(deployer.address);
   console.log("Solde:", ethers.formatEther(balance), "ETH");
@@ -20,78 +18,101 @@ async function deployVeegoxChain() {
     throw new Error("❌ Solde insuffisant pour le déploiement. Minimum 0.01 ETH requis.");
   }
 
-  const contractDeployer = new ContractDeployer(deployer);
-
   // 1. Déployer le contrat de consensus
-  const consensus = await contractDeployer.deployConsensus(
-    VEEGOXCHAIN_CONFIG.stakingRequirement,
-    VEEGOXCHAIN_CONFIG.blockTime
-  );
+  console.log("\n📋 1. Déploiement du contrat de consensus...");
+  const VeegoxConsensus = await ethers.getContractFactory("VeegoxConsensus");
+  
+  const stakingRequirement = ethers.parseEther("10000"); // 10,000 VGX
+  const blockTime = 3; // 3 secondes
+  
+  const consensus = await VeegoxConsensus.deploy(stakingRequirement, blockTime);
+  await consensus.waitForDeployment();
+  
+  console.log("✅ Consensus déployé:", await consensus.getAddress());
 
   // 2. Déployer le contrat de validation
-  const validator = await contractDeployer.deployValidator(
-    consensus.target,
-    VEEGOXCHAIN_CONFIG.stakingRequirement
-  );
+  console.log("\n🛡️ 2. Déploiement du système de validation...");
+  const VeegoxValidator = await ethers.getContractFactory("VeegoxValidator");
+  
+  const validator = await VeegoxValidator.deploy(await consensus.getAddress(), stakingRequirement);
+  await validator.waitForDeployment();
+  
+  console.log("✅ Validateur déployé:", await validator.getAddress());
 
   // 3. Déployer le token natif VGX
-  const vgxToken = await contractDeployer.deployToken(
-    "VeegoxChain Token",
-    "VGX",
-    ethers.parseEther("1000000000") // 1 milliard de tokens
-  );
+  console.log("\n🪙 3. Déploiement du token natif VGX...");
+  const VeegoxToken = await ethers.getContractFactory("VeegoxToken");
+  
+  const totalSupply = ethers.parseEther("1000000000"); // 1 milliard de tokens
+  const vgxToken = await VeegoxToken.deploy("VeegoxChain Token", "VGX", totalSupply);
+  await vgxToken.waitForDeployment();
+  
+  console.log("✅ Token VGX déployé:", await vgxToken.getAddress());
 
   // 4. Configuration initiale
-  await contractDeployer.configureContracts(consensus, validator, vgxToken);
+  console.log("\n⚙️ 4. Configuration initiale...");
+  
+  // Configurer le consensus avec le token VGX
+  const setStakingTokenTx = await consensus.setStakingToken(await vgxToken.getAddress());
+  await setStakingTokenTx.wait();
+  console.log("✅ Token de staking configuré");
 
-  // 5. Préparer les informations de déploiement
-  const networkInfo = await ethers.provider.getNetwork();
+  // Configurer le validateur avec le token VGX
+  const setValidatorTokenTx = await validator.setStakingToken(await vgxToken.getAddress());
+  await setValidatorTokenTx.wait();
+  console.log("✅ Token validateur configuré");
+
+  // 5. Informations de déploiement
   const deploymentInfo = {
-    network: networkInfo,
-    chainId: Number(networkInfo.chainId),
-    veegoxChainId: VEEGOXCHAIN_CONFIG.chainId,
+    network: {
+      name: network.name,
+      chainId: Number(network.chainId)
+    },
     deployer: deployer.address,
     deploymentTime: new Date().toISOString(),
-    gasUsed: {
-      consensus: "pending", // Will be filled after transaction confirmation
-      validator: "pending",
-      token: "pending"
-    },
     contracts: {
-      consensus: {
-        address: consensus.target,
-        txHash: consensus.deploymentTransaction().hash
-      },
-      validator: {
-        address: validator.target,
-        txHash: validator.deploymentTransaction().hash
-      },
-      nativeToken: {
-        address: vgxToken.target,
-        txHash: vgxToken.deploymentTransaction().hash
-      }
-    },
-    config: VEEGOXCHAIN_CONFIG
+      consensus: await consensus.getAddress(),
+      validator: await validator.getAddress(),
+      nativeToken: await vgxToken.getAddress()
+    }
   };
 
-  // 6. Générer tous les fichiers de configuration
-  const fileGenerator = new FileGenerator(VEEGOXCHAIN_CONFIG, deploymentInfo);
-  fileGenerator.writeAllFiles();
+  // 6. Sauvegarder les informations de déploiement
+  const fs = require("fs");
+  fs.writeFileSync("./veegoxchain-deployment.json", JSON.stringify(deploymentInfo, null, 2));
 
-  // 7. Afficher le rapport final
-  const reporter = new DeploymentReporter(VEEGOXCHAIN_CONFIG, deploymentInfo);
-  reporter.printFullReport();
+  console.log("\n🎉 VeegoxChain déployée avec succès!");
+  console.log("=".repeat(60));
+  console.log("🌐 Réseau:", network.name);
+  console.log("📍 Consensus:", await consensus.getAddress());
+  console.log("🛡️ Validateur:", await validator.getAddress());
+  console.log("🪙 Token VGX:", await vgxToken.getAddress());
+  console.log("📄 Informations sauvegardées dans veegoxchain-deployment.json");
+
+  console.log("\n📋 Prochaines étapes:");
+  console.log("1. Vérifier les contrats sur Etherscan");
+  console.log("2. Ajouter les adresses aux variables d'environnement");
+  console.log("3. Configurer l'interface utilisateur");
 
   return deploymentInfo;
 }
 
 async function main() {
-  return await deployVeegoxChain();
+  try {
+    return await deployVeegoxChain();
+  } catch (error) {
+    console.error("❌ Erreur de déploiement:", error.message);
+    process.exit(1);
+  }
 }
 
-main()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error("❌ Erreur de déploiement VeegoxChain:", error);
-    process.exit(1);
-  });
+if (require.main === module) {
+  main()
+    .then(() => process.exit(0))
+    .catch((error) => {
+      console.error(error);
+      process.exit(1);
+    });
+}
+
+module.exports = { deployVeegoxChain };
