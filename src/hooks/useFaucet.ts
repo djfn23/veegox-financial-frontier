@@ -42,9 +42,19 @@ export const useFaucet = () => {
 
         // Convert interval to readable format
         if (timeData) {
-          const hours = Math.floor(timeData.hours || 0);
-          const minutes = Math.floor((timeData.minutes || 0) % 60);
-          setTimeUntilNext(`${hours}h ${minutes}m`);
+          // Parse the PostgreSQL interval string
+          const intervalString = timeData.toString();
+          console.log('Time data received:', intervalString);
+          
+          // Extract hours and minutes from interval string
+          const timeMatch = intervalString.match(/(\d+):(\d+):(\d+)/);
+          if (timeMatch) {
+            const hours = parseInt(timeMatch[1]);
+            const minutes = parseInt(timeMatch[2]);
+            setTimeUntilNext(`${hours}h ${minutes}m`);
+          } else {
+            setTimeUntilNext('0h 0m');
+          }
         }
       }
 
