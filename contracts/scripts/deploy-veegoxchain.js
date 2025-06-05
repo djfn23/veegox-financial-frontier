@@ -20,9 +20,14 @@ async function deployVeegoxChain() {
   console.log("🚀 Déploiement de VeegoxChain");
   console.log("=".repeat(50));
   console.log("Déployeur:", deployer.address);
+  console.log("Réseau:", await ethers.provider.getNetwork());
   
   const balance = await deployer.getBalance();
   console.log("Solde:", ethers.utils.formatEther(balance), "ETH");
+
+  if (balance.lt(ethers.utils.parseEther("0.01"))) {
+    throw new Error("❌ Solde insuffisant pour le déploiement. Minimum 0.01 ETH requis.");
+  }
 
   // 1. Déployer le contrat de consensus VeegoxChain
   console.log("\n📋 1. Déploiement du contrat de consensus...");
@@ -35,6 +40,7 @@ async function deployVeegoxChain() {
   
   await consensus.deployed();
   console.log("✅ Consensus déployé:", consensus.address);
+  console.log("📝 Transaction hash:", consensus.deployTransaction.hash);
 
   // 2. Déployer le contrat de validation
   console.log("\n🛡️ 2. Déploiement du système de validation...");
@@ -47,6 +53,7 @@ async function deployVeegoxChain() {
   
   await validator.deployed();
   console.log("✅ Validateur déployé:", validator.address);
+  console.log("📝 Transaction hash:", validator.deployTransaction.hash);
 
   // 3. Déployer le token natif VGX
   console.log("\n🪙 3. Déploiement du token natif VGX...");
@@ -60,28 +67,33 @@ async function deployVeegoxChain() {
   
   await vgxToken.deployed();
   console.log("✅ Token VGX déployé:", vgxToken.address);
+  console.log("📝 Transaction hash:", vgxToken.deployTransaction.hash);
 
   // 4. Configuration initiale
   console.log("\n⚙️ 4. Configuration initiale...");
   
   // Configurer le consensus avec le token VGX
-  await consensus.setStakingToken(vgxToken.address);
+  const setStakingTokenTx = await consensus.setStakingToken(vgxToken.address);
+  await setStakingTokenTx.wait();
   console.log("✅ Token de staking configuré");
 
-  // Ajouter des validateurs initiaux
-  const initialStake = VEEGOXCHAIN_CONFIG.stakingRequirement;
-  
-  // Approuver et staker pour devenir validateur
-  await vgxToken.approve(validator.address, initialStake.mul(3));
-  await validator.becomeValidator(initialStake);
-  console.log("✅ Validateur initial configuré");
+  // Configurer le validateur avec le token VGX
+  const setValidatorTokenTx = await validator.setStakingToken(vgxToken.address);
+  await setValidatorTokenTx.wait();
+  console.log("✅ Token validateur configuré");
 
   // 5. Configuration Alchemy pour VeegoxChain
   console.log("\n🌐 5. Configuration Alchemy...");
   
+  const networkInfo = await ethers.provider.getNetwork();
   const alchemyConfig = {
     chainId: VEEGOXCHAIN_CONFIG.chainId,
     chainName: VEEGOXCHAIN_CONFIG.name,
+    networkName: networkInfo.name,
+    deployedOn: {
+      network: networkInfo.name,
+      chainId: networkInfo.chainId
+    },
     nativeCurrency: {
       name: "VeegoxChain Token",
       symbol: VEEGOXCHAIN_CONFIG.symbol,
@@ -114,10 +126,16 @@ async function deployVeegoxChain() {
 
   // Sauvegarder la configuration
   const deploymentInfo = {
-    network: "VeegoxChain",
-    chainId: VEEGOXCHAIN_CONFIG.chainId,
+    network: networkInfo.name,
+    chainId: networkInfo.chainId,
+    veegoxChainId: VEEGOXCHAIN_CONFIG.chainId,
     deployer: deployer.address,
     deploymentTime: new Date().toISOString(),
+    gasUsed: {
+      consensus: (await consensus.deployTransaction.wait()).gasUsed.toString(),
+      validator: (await validator.deployTransaction.wait()).gasUsed.toString(),
+      token: (await vgxToken.deployTransaction.wait()).gasUsed.toString()
+    },
     contracts: {
       consensus: {
         address: consensus.address,
@@ -169,26 +187,29 @@ async function deployVeegoxChain() {
 
   // Variables d'environnement pour Supabase
   const supabaseEnvVars = `
-# Configuration VeegoxChain
+# Configuration VeegoxChain - Déployé le ${new Date().toISOString()}
 VEEGOXCHAIN_CHAIN_ID=${VEEGOXCHAIN_CONFIG.chainId}
 VEEGOXCHAIN_NAME=${VEEGOXCHAIN_CONFIG.name}
 VEEGOXCHAIN_SYMBOL=${VEEGOXCHAIN_CONFIG.symbol}
 VEEGOXCHAIN_CONSENSUS_ADDRESS=${consensus.address}
 VEEGOXCHAIN_VALIDATOR_ADDRESS=${validator.address}
 VEEGOXCHAIN_TOKEN_ADDRESS=${vgxToken.address}
-VEEGOXCHAIN_RPC_URL=https://veegoxchain-mainnet.g.alchemy.com/v2/YOUR_API_KEY
-VEEGOXCHAIN_WSS_URL=wss://veegoxchain-mainnet.g.alchemy.com/v2/YOUR_API_KEY
+VEEGOXCHAIN_RPC_URL=https://veegoxchain-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}
+VEEGOXCHAIN_WSS_URL=wss://veegoxchain-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}
 VEEGOXCHAIN_EXPLORER_URL=https://explorer.veegoxchain.com
+VEEGOXCHAIN_DEPLOYED_ON=${networkInfo.name}
+VEEGOXCHAIN_DEPLOYER=${deployer.address}
 `;
 
   fs.writeFileSync("./supabase-veegoxchain-env.txt", supabaseEnvVars);
 
   console.log("\n🎉 VeegoxChain déployée avec succès!");
   console.log("=".repeat(60));
+  console.log("🌐 Réseau de déploiement:", networkInfo.name);
   console.log("📍 Consensus:", consensus.address);
   console.log("🛡️ Validateur:", validator.address);
   console.log("🪙 Token VGX:", vgxToken.address);
-  console.log("🆔 Chain ID:", VEEGOXCHAIN_CONFIG.chainId);
+  console.log("🆔 VeegoxChain ID:", VEEGOXCHAIN_CONFIG.chainId);
   console.log("⛓️ Block Time:", VEEGOXCHAIN_CONFIG.blockTime, "secondes");
   
   console.log("\n📄 Fichiers générés:");
@@ -198,11 +219,18 @@ VEEGOXCHAIN_EXPLORER_URL=https://explorer.veegoxchain.com
   console.log("  - supabase-veegoxchain-env.txt");
 
   console.log("\n📋 Prochaines étapes:");
-  console.log("1. Configurer les nœuds Alchemy pour VeegoxChain");
-  console.log("2. Ajouter les variables à Supabase");
-  console.log("3. Déployer les contrats de l'écosystème Veegox");
-  console.log("4. Configurer le bridge multi-chaînes");
-  console.log("5. Activer la surveillance en temps réel");
+  console.log("1. Vérifier les contrats sur Etherscan");
+  console.log("2. Configurer les nœuds Alchemy pour VeegoxChain");
+  console.log("3. Ajouter les variables à Supabase");
+  console.log("4. Déployer les contrats de l'écosystème Veegox");
+  console.log("5. Configurer le bridge multi-chaînes");
+  console.log("6. Activer la surveillance en temps réel");
+
+  // Commandes de vérification
+  console.log("\n🔍 Commandes de vérification:");
+  console.log(`npx hardhat verify --network ${networkInfo.name} ${consensus.address} "${VEEGOXCHAIN_CONFIG.stakingRequirement}" ${VEEGOXCHAIN_CONFIG.blockTime}`);
+  console.log(`npx hardhat verify --network ${networkInfo.name} ${validator.address} "${consensus.address}" "${VEEGOXCHAIN_CONFIG.stakingRequirement}"`);
+  console.log(`npx hardhat verify --network ${networkInfo.name} ${vgxToken.address} "VeegoxChain Token" "VGX" "${ethers.utils.parseEther("1000000000")}"`);
 
   return deploymentInfo;
 }
