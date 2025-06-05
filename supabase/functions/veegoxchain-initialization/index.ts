@@ -60,16 +60,30 @@ async function initializeVeegoxChain(contractAddress: string, alchemyApiKey: str
     throw new Error(`Contrat ${contractAddress} non trouvé sur le réseau`)
   }
 
-  // 2. Mettre à jour le statut à "deploying"
+  // 2. Créer ou mettre à jour la configuration VeegoxChain
+  const chainConfig = {
+    chain_id: 123456789,
+    name: 'VeegoxChain',
+    symbol: 'VGX',
+    rpc_url: `https://eth-sepolia.g.alchemy.com/v2/${alchemyApiKey}`,
+    ws_url: `wss://eth-sepolia.g.alchemy.com/v2/${alchemyApiKey}`,
+    explorer_url: 'https://sepolia.etherscan.io',
+    consensus: 'PoS',
+    block_time: 3,
+    gas_limit: '30000000',
+    is_active: true,
+    is_testnet: true,
+    network_status: 'deploying',
+    consensus_address: contractAddress,
+    validator_address: contractAddress,
+    token_address: contractAddress
+  }
+
   const { error: updateError } = await supabase
     .from('veegoxchain_config')
-    .update({ 
-      network_status: 'deploying',
-      consensus_address: contractAddress,
-      validator_address: contractAddress,
-      token_address: contractAddress
+    .upsert(chainConfig, {
+      onConflict: 'chain_id'
     })
-    .eq('chain_id', 123456789)
 
   if (updateError) {
     console.error('Erreur mise à jour config:', updateError)
@@ -79,7 +93,7 @@ async function initializeVeegoxChain(contractAddress: string, alchemyApiKey: str
   // 3. Créer un validateur initial avec le contrat
   const { error: validatorError } = await supabase
     .from('veegoxchain_validators')
-    .insert({
+    .upsert({
       validator_address: contractAddress,
       stake: '10000000000000000000000', // 10,000 tokens
       commission_rate: 5.0,
@@ -88,6 +102,8 @@ async function initializeVeegoxChain(contractAddress: string, alchemyApiKey: str
       uptime: 100.0,
       blocks_proposed: 0,
       rewards_earned: 0
+    }, {
+      onConflict: 'validator_address'
     })
 
   if (validatorError) {
@@ -97,7 +113,7 @@ async function initializeVeegoxChain(contractAddress: string, alchemyApiKey: str
   // 4. Créer un déploiement record
   const { error: deploymentError } = await supabase
     .from('veegoxchain_deployments')
-    .insert({
+    .upsert({
       chain_id: 123456789,
       network: 'sepolia',
       deployer_address: contractAddress,
@@ -107,10 +123,31 @@ async function initializeVeegoxChain(contractAddress: string, alchemyApiKey: str
       token_address: contractAddress,
       deployment_block: 1,
       status: 'deployed'
+    }, {
+      onConflict: 'chain_id'
     })
 
   if (deploymentError) {
     console.error('Erreur enregistrement déploiement:', deploymentError)
+  }
+
+  // 5. Initialiser les métriques
+  const { error: metricsError } = await supabase
+    .from('veegoxchain_metrics')
+    .upsert({
+      chain_id: 123456789,
+      block_height: 1,
+      tps: 0,
+      avg_block_time: 3,
+      total_transactions: 0,
+      active_validators: 1,
+      gas_price_avg: 20000000000
+    }, {
+      onConflict: 'chain_id'
+    })
+
+  if (metricsError) {
+    console.error('Erreur métriques:', metricsError)
   }
 
   return new Response(

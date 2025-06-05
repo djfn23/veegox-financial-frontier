@@ -16,7 +16,7 @@ interface VeegoxChainConfig {
   explorerUrl: string;
   consensus: 'PoS' | 'PoA';
   blockTime: number;
-  gasLimit: bigint;
+  gasLimit: string;
   validators: string[];
 }
 
@@ -80,7 +80,7 @@ async function deployVeegoxChain(config: VeegoxChainConfig, alchemyApiKey: strin
     explorer_url: config.explorerUrl,
     consensus: config.consensus,
     block_time: config.blockTime,
-    gas_limit: config.gasLimit.toString(),
+    gas_limit: config.gasLimit,
     is_active: true,
     is_testnet: false
   }
@@ -228,6 +228,7 @@ async function getLatestBlocks(alchemyApiKey: string, supabase: any) {
 
     if (error) throw error
 
+    // Convertir les BigInt en string pour éviter les erreurs de sérialisation
     const formattedBlocks = blocks?.map(block => ({
       number: block.block_number,
       hash: block.block_hash,
@@ -235,8 +236,8 @@ async function getLatestBlocks(alchemyApiKey: string, supabase: any) {
       timestamp: block.timestamp,
       transactions: [], // À implémenter
       validator: block.validator,
-      gasUsed: BigInt(block.gas_used),
-      gasLimit: BigInt(block.gas_limit)
+      gasUsed: block.gas_used.toString(),
+      gasLimit: block.gas_limit.toString()
     })) || []
 
     return new Response(
@@ -265,9 +266,10 @@ async function getValidators(supabase: any) {
 
     if (error) throw error
 
+    // Convertir les BigInt en string pour éviter les erreurs de sérialisation
     const formattedValidators = validators?.map(validator => ({
       address: validator.validator_address,
-      stake: BigInt(validator.stake),
+      stake: validator.stake.toString(),
       commissionRate: validator.commission_rate,
       isActive: validator.is_active,
       delegators: validator.delegators || 0,
