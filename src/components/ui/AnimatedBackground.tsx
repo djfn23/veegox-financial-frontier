@@ -3,21 +3,31 @@ import React from 'react';
 
 const AnimatedBackground = () => {
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/10 to-indigo-900/20"></div>
-      {/* Floating particles */}
-      {[...Array(20)].map((_, i) => (
-        <div
-          key={i}
-          className="absolute w-1 h-1 bg-purple-400/30 rounded-full animate-float"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * 3}s`,
-            animationDuration: `${3 + Math.random() * 2}s`,
-          }}
-        />
-      ))}
+    <div className="fixed inset-0 overflow-hidden pointer-events-none">
+      {/* Gradient background */}
+      <div className="absolute inset-0 veegox-gradient-dark opacity-90" />
+      
+      {/* Animated particles */}
+      <div className="veegox-particles">
+        {[...Array(20)].map((_, i) => (
+          <div
+            key={i}
+            className="veegox-particle"
+            style={{
+              left: `${Math.random() * 100}%`,
+              width: `${Math.random() * 6 + 2}px`,
+              height: `${Math.random() * 6 + 2}px`,
+              animationDelay: `${Math.random() * 20}s`,
+              animationDuration: `${Math.random() * 10 + 15}s`
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Gradient orbs */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute top-3/4 right-1/4 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+      <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }} />
     </div>
   );
 };
