@@ -13,10 +13,10 @@ async function deployVeegoxChain() {
   console.log("Déployeur:", deployer.address);
   console.log("Réseau:", await ethers.provider.getNetwork());
   
-  const balance = await deployer.getBalance();
-  console.log("Solde:", ethers.utils.formatEther(balance), "ETH");
+  const balance = await ethers.provider.getBalance(deployer.address);
+  console.log("Solde:", ethers.formatEther(balance), "ETH");
 
-  if (balance.lt(ethers.utils.parseEther("0.01"))) {
+  if (balance < ethers.parseEther("0.01")) {
     throw new Error("❌ Solde insuffisant pour le déploiement. Minimum 0.01 ETH requis.");
   }
 
@@ -30,7 +30,7 @@ async function deployVeegoxChain() {
 
   // 2. Déployer le contrat de validation
   const validator = await contractDeployer.deployValidator(
-    consensus.address,
+    consensus.target,
     VEEGOXCHAIN_CONFIG.stakingRequirement
   );
 
@@ -38,7 +38,7 @@ async function deployVeegoxChain() {
   const vgxToken = await contractDeployer.deployToken(
     "VeegoxChain Token",
     "VGX",
-    ethers.utils.parseEther("1000000000") // 1 milliard de tokens
+    ethers.parseEther("1000000000") // 1 milliard de tokens
   );
 
   // 4. Configuration initiale
@@ -48,27 +48,27 @@ async function deployVeegoxChain() {
   const networkInfo = await ethers.provider.getNetwork();
   const deploymentInfo = {
     network: networkInfo,
-    chainId: networkInfo.chainId,
+    chainId: Number(networkInfo.chainId),
     veegoxChainId: VEEGOXCHAIN_CONFIG.chainId,
     deployer: deployer.address,
     deploymentTime: new Date().toISOString(),
     gasUsed: {
-      consensus: (await consensus.deployTransaction.wait()).gasUsed.toString(),
-      validator: (await validator.deployTransaction.wait()).gasUsed.toString(),
-      token: (await vgxToken.deployTransaction.wait()).gasUsed.toString()
+      consensus: "pending", // Will be filled after transaction confirmation
+      validator: "pending",
+      token: "pending"
     },
     contracts: {
       consensus: {
-        address: consensus.address,
-        txHash: consensus.deployTransaction.hash
+        address: consensus.target,
+        txHash: consensus.deploymentTransaction().hash
       },
       validator: {
-        address: validator.address,
-        txHash: validator.deployTransaction.hash
+        address: validator.target,
+        txHash: validator.deploymentTransaction().hash
       },
       nativeToken: {
-        address: vgxToken.address,
-        txHash: vgxToken.deployTransaction.hash
+        address: vgxToken.target,
+        txHash: vgxToken.deploymentTransaction().hash
       }
     },
     config: VEEGOXCHAIN_CONFIG
