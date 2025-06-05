@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { QueryClient } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
-import { Sonner } from '@/components/ui/sonner';
+import { Toaster as SonnerToaster } from '@/components/ui/sonner';
 import { TooltipProvider } from "@/components/ui/tooltip"
 import Dashboard from '@/pages/Dashboard';
 import Blockchain from '@/pages/Blockchain';
@@ -15,13 +16,15 @@ import { AuthProvider } from '@/components/auth/AuthProvider';
 import Auth from '@/pages/Auth';
 import DEX from '@/pages/DEX';
 
+const queryClient = new QueryClient();
+
 function App() {
   return (
-    <QueryClient>
+    <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>
           <Toaster />
-          <Sonner />
+          <SonnerToaster />
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Dashboard />} />
@@ -37,7 +40,7 @@ function App() {
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>
-    </QueryClient>
+    </QueryClientProvider>
   );
 }
 
