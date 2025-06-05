@@ -36,7 +36,11 @@ module.exports = {
       blockGasLimit: 30000000,
       gas: 30000000,
       gasPrice: "auto",
-      allowUnlimitedContractSize: true
+      allowUnlimitedContractSize: true,
+      mining: {
+        auto: true,
+        interval: 0
+      }
     },
     
     sepolia: {
