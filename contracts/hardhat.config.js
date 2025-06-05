@@ -32,7 +32,11 @@ module.exports = {
   },
   networks: {
     hardhat: {
-      chainId: 1337
+      chainId: 1337,
+      blockGasLimit: 30000000,
+      gas: 30000000,
+      gasPrice: "auto",
+      allowUnlimitedContractSize: true
     },
     
     sepolia: {
@@ -41,12 +45,16 @@ module.exports = {
       chainId: 11155111,
       gas: 6000000,
       gasPrice: 20000000000, // 20 gwei
-      timeout: 60000
+      timeout: 120000,
+      allowUnlimitedContractSize: true
     }
   },
   etherscan: {
     apiKey: {
       sepolia: process.env.ETHERSCAN_API_KEY || ""
     }
+  },
+  mocha: {
+    timeout: 300000
   }
 };

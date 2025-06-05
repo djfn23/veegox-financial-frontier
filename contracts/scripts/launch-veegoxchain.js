@@ -7,20 +7,45 @@ console.log("🚀 Lancement automatique de VeegoxChain");
 console.log("=====================================");
 
 // Fonction pour exécuter une commande et afficher la sortie
-function runCommand(command, description) {
+function runCommand(command, description, options = {}) {
   console.log(`\n📋 ${description}...`);
   try {
-    execSync(command, { 
+    const defaultOptions = { 
       stdio: 'inherit', 
       cwd: path.resolve(__dirname, '..'),
-      timeout: 300000 // 5 minutes timeout
-    });
+      timeout: 300000, // 5 minutes timeout
+      windowsHide: true, // Hide window on Windows
+      shell: true
+    };
+    
+    const mergedOptions = { ...defaultOptions, ...options };
+    
+    execSync(command, mergedOptions);
     console.log(`✅ ${description} terminé avec succès`);
     return true;
   } catch (error) {
     console.error(`❌ Erreur lors de ${description}:`, error.message);
+    if (error.stdout) console.log('STDOUT:', error.stdout.toString());
+    if (error.stderr) console.log('STDERR:', error.stderr.toString());
     return false;
   }
+}
+
+// Fonction pour nettoyer les fichiers de cache
+function cleanCache() {
+  const cacheDirs = ['cache', 'artifacts', 'node_modules/.cache'];
+  
+  cacheDirs.forEach(dir => {
+    const fullPath = path.join(__dirname, '..', dir);
+    if (fs.existsSync(fullPath)) {
+      try {
+        fs.rmSync(fullPath, { recursive: true, force: true });
+        console.log(`🧹 Cache ${dir} nettoyé`);
+      } catch (error) {
+        console.warn(`⚠️ Impossible de nettoyer ${dir}:`, error.message);
+      }
+    }
+  });
 }
 
 async function launchVeegoxChain() {
@@ -65,21 +90,48 @@ async function launchVeegoxChain() {
       }
     }
 
-    // 1. Installation des dépendances
-    if (!runCommand('npm install', 'Installation des dépendances')) {
+    console.log("✅ Tous les contrats requis sont présents");
+
+    // 1. Nettoyer le cache
+    console.log("\n🧹 Nettoyage du cache...");
+    cleanCache();
+
+    // 2. Installation des dépendances
+    if (!runCommand('npm install --no-optional --legacy-peer-deps', 'Installation des dépendances')) {
+      console.error("❌ Échec de l'installation des dépendances");
       process.exit(1);
     }
 
-    // 2. Nettoyage du cache Hardhat
-    runCommand('npx hardhat clean', 'Nettoyage du cache');
+    // 3. Compilation des contrats avec retry
+    console.log("\n🔨 Compilation des contrats...");
+    let compilationSuccess = false;
+    const maxRetries = 3;
+    
+    for (let i = 0; i < maxRetries; i++) {
+      console.log(`Tentative de compilation ${i + 1}/${maxRetries}...`);
+      
+      if (runCommand('npx hardhat clean', 'Nettoyage Hardhat', { stdio: 'pipe' })) {
+        if (runCommand('npx hardhat compile --force', 'Compilation forcée', { stdio: 'inherit' })) {
+          compilationSuccess = true;
+          break;
+        }
+      }
+      
+      if (i < maxRetries - 1) {
+        console.log("⏳ Attente avant nouvelle tentative...");
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        cleanCache();
+      }
+    }
 
-    // 3. Compilation des contrats
-    if (!runCommand('npx hardhat compile', 'Compilation des contrats')) {
+    if (!compilationSuccess) {
+      console.error("❌ Échec de la compilation après plusieurs tentatives");
       process.exit(1);
     }
 
     // 4. Déploiement sur Sepolia
     if (!runCommand('npx hardhat run scripts/deploy-veegoxchain.js --network sepolia', 'Déploiement VeegoxChain sur Sepolia')) {
+      console.error("❌ Échec du déploiement");
       process.exit(1);
     }
 
