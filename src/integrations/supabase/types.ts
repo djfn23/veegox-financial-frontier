@@ -517,6 +517,45 @@ export type Database = {
         }
         Relationships: []
       }
+      veegoxchain_alerts: {
+        Row: {
+          alert_data: Json | null
+          alert_type: string
+          chain_id: number
+          created_at: string
+          description: string
+          id: string
+          resolved: boolean | null
+          resolved_at: string | null
+          severity: string
+          title: string
+        }
+        Insert: {
+          alert_data?: Json | null
+          alert_type: string
+          chain_id: number
+          created_at?: string
+          description: string
+          id?: string
+          resolved?: boolean | null
+          resolved_at?: string | null
+          severity?: string
+          title: string
+        }
+        Update: {
+          alert_data?: Json | null
+          alert_type?: string
+          chain_id?: number
+          created_at?: string
+          description?: string
+          id?: string
+          resolved?: boolean | null
+          resolved_at?: string | null
+          severity?: string
+          title?: string
+        }
+        Relationships: []
+      }
       veegoxchain_blocks: {
         Row: {
           block_hash: string
@@ -564,49 +603,211 @@ export type Database = {
           block_time: number
           chain_id: number
           consensus: string
+          consensus_address: string | null
           created_at: string
+          deployment_block: number | null
+          deployment_tx_hash: string | null
           explorer_url: string
           gas_limit: string
           id: string
           is_active: boolean
           is_testnet: boolean
           name: string
+          network_status: string | null
+          network_type: string | null
           rpc_url: string
           symbol: string
+          token_address: string | null
+          total_stake: number | null
+          total_validators: number | null
           updated_at: string
+          validator_address: string | null
           ws_url: string
         }
         Insert: {
           block_time: number
           chain_id: number
           consensus: string
+          consensus_address?: string | null
           created_at?: string
+          deployment_block?: number | null
+          deployment_tx_hash?: string | null
           explorer_url: string
           gas_limit: string
           id?: string
           is_active?: boolean
           is_testnet?: boolean
           name: string
+          network_status?: string | null
+          network_type?: string | null
           rpc_url: string
           symbol: string
+          token_address?: string | null
+          total_stake?: number | null
+          total_validators?: number | null
           updated_at?: string
+          validator_address?: string | null
           ws_url: string
         }
         Update: {
           block_time?: number
           chain_id?: number
           consensus?: string
+          consensus_address?: string | null
           created_at?: string
+          deployment_block?: number | null
+          deployment_tx_hash?: string | null
           explorer_url?: string
           gas_limit?: string
           id?: string
           is_active?: boolean
           is_testnet?: boolean
           name?: string
+          network_status?: string | null
+          network_type?: string | null
           rpc_url?: string
           symbol?: string
+          token_address?: string | null
+          total_stake?: number | null
+          total_validators?: number | null
           updated_at?: string
+          validator_address?: string | null
           ws_url?: string
+        }
+        Relationships: []
+      }
+      veegoxchain_deployments: {
+        Row: {
+          chain_id: number
+          consensus_address: string
+          created_at: string
+          deployer_address: string
+          deployment_block: number
+          deployment_cost: number | null
+          deployment_tx_hash: string
+          gas_used: number | null
+          id: string
+          network: string
+          status: string | null
+          token_address: string
+          validator_address: string
+        }
+        Insert: {
+          chain_id: number
+          consensus_address: string
+          created_at?: string
+          deployer_address: string
+          deployment_block: number
+          deployment_cost?: number | null
+          deployment_tx_hash: string
+          gas_used?: number | null
+          id?: string
+          network: string
+          status?: string | null
+          token_address: string
+          validator_address: string
+        }
+        Update: {
+          chain_id?: number
+          consensus_address?: string
+          created_at?: string
+          deployer_address?: string
+          deployment_block?: number
+          deployment_cost?: number | null
+          deployment_tx_hash?: string
+          gas_used?: number | null
+          id?: string
+          network?: string
+          status?: string | null
+          token_address?: string
+          validator_address?: string
+        }
+        Relationships: []
+      }
+      veegoxchain_events: {
+        Row: {
+          block_hash: string
+          block_number: number
+          chain_id: number
+          contract_address: string
+          created_at: string
+          event_data: Json
+          event_name: string
+          id: string
+          log_index: number
+          processed: boolean | null
+          processed_at: string | null
+          transaction_hash: string
+        }
+        Insert: {
+          block_hash: string
+          block_number: number
+          chain_id: number
+          contract_address: string
+          created_at?: string
+          event_data: Json
+          event_name: string
+          id?: string
+          log_index: number
+          processed?: boolean | null
+          processed_at?: string | null
+          transaction_hash: string
+        }
+        Update: {
+          block_hash?: string
+          block_number?: number
+          chain_id?: number
+          contract_address?: string
+          created_at?: string
+          event_data?: Json
+          event_name?: string
+          id?: string
+          log_index?: number
+          processed?: boolean | null
+          processed_at?: string | null
+          transaction_hash?: string
+        }
+        Relationships: []
+      }
+      veegoxchain_metrics: {
+        Row: {
+          active_validators: number | null
+          avg_block_time: number | null
+          block_height: number
+          chain_id: number
+          created_at: string
+          gas_price_avg: number | null
+          id: string
+          network_hashrate: string | null
+          timestamp: string
+          total_transactions: number | null
+          tps: number | null
+        }
+        Insert: {
+          active_validators?: number | null
+          avg_block_time?: number | null
+          block_height?: number
+          chain_id: number
+          created_at?: string
+          gas_price_avg?: number | null
+          id?: string
+          network_hashrate?: string | null
+          timestamp?: string
+          total_transactions?: number | null
+          tps?: number | null
+        }
+        Update: {
+          active_validators?: number | null
+          avg_block_time?: number | null
+          block_height?: number
+          chain_id?: number
+          created_at?: string
+          gas_price_avg?: number | null
+          id?: string
+          network_hashrate?: string | null
+          timestamp?: string
+          total_transactions?: number | null
+          tps?: number | null
         }
         Relationships: []
       }
@@ -699,36 +900,54 @@ export type Database = {
       }
       veegoxchain_validators: {
         Row: {
+          blocks_proposed: number | null
           chain_id: number
           commission_rate: number
           created_at: string
           delegators: number
           id: string
           is_active: boolean
+          joined_at: string | null
+          last_active_at: string | null
+          last_block_proposed: number | null
+          rewards_earned: number | null
+          slash_count: number | null
           stake: string
           updated_at: string
           uptime: number
           validator_address: string
         }
         Insert: {
+          blocks_proposed?: number | null
           chain_id?: number
           commission_rate?: number
           created_at?: string
           delegators?: number
           id?: string
           is_active?: boolean
+          joined_at?: string | null
+          last_active_at?: string | null
+          last_block_proposed?: number | null
+          rewards_earned?: number | null
+          slash_count?: number | null
           stake: string
           updated_at?: string
           uptime?: number
           validator_address: string
         }
         Update: {
+          blocks_proposed?: number | null
           chain_id?: number
           commission_rate?: number
           created_at?: string
           delegators?: number
           id?: string
           is_active?: boolean
+          joined_at?: string | null
+          last_active_at?: string | null
+          last_block_proposed?: number | null
+          rewards_earned?: number | null
+          slash_count?: number | null
           stake?: string
           updated_at?: string
           uptime?: number
