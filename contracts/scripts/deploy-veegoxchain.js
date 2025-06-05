@@ -85,13 +85,13 @@ async function deployVeegoxChain() {
   return deploymentInfo;
 }
 
+async function main() {
+  return await deployVeegoxChain();
+}
+
 main()
   .then(() => process.exit(0))
   .catch((error) => {
     console.error("❌ Erreur de déploiement VeegoxChain:", error);
     process.exit(1);
   });
-
-async function main() {
-  return await deployVeegoxChain();
-}
