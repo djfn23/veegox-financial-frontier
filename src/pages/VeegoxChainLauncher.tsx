@@ -1,7 +1,7 @@
 
 import React from 'react';
 import Navigation from '@/components/layout/Navigation';
-import VeegoxChainLauncher from '@/components/veegoxchain/VeegoxChainLauncher';
+import VeegoxChainAutoLauncher from '@/components/veegoxchain/VeegoxChainAutoLauncher';
 
 const VeegoxChainLauncherPage = () => {
   return (
@@ -16,12 +16,12 @@ const VeegoxChainLauncherPage = () => {
               Créer <span className="gradient-text">VeegoxChain</span>
             </h1>
             <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-              Lancez votre blockchain personnalisée avec votre contrat existant
+              Déploiement automatique de votre blockchain avec Alchemy et votre smart contract
             </p>
           </div>
 
-          {/* Launcher Component */}
-          <VeegoxChainLauncher />
+          {/* Auto Launcher Component */}
+          <VeegoxChainAutoLauncher />
         </div>
       </div>
     </div>
