@@ -144,6 +144,125 @@ export type Database = {
         }
         Relationships: []
       }
+      crowdfunding_contributions: {
+        Row: {
+          amount: number
+          contributor_id: string
+          created_at: string
+          id: string
+          project_id: string
+          token_type: Database["public"]["Enums"]["token_type"]
+          transaction_hash: string | null
+        }
+        Insert: {
+          amount: number
+          contributor_id: string
+          created_at?: string
+          id?: string
+          project_id: string
+          token_type: Database["public"]["Enums"]["token_type"]
+          transaction_hash?: string | null
+        }
+        Update: {
+          amount?: number
+          contributor_id?: string
+          created_at?: string
+          id?: string
+          project_id?: string
+          token_type?: Database["public"]["Enums"]["token_type"]
+          transaction_hash?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crowdfunding_contributions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "crowdfunding_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crowdfunding_projects: {
+        Row: {
+          category: string | null
+          created_at: string
+          creator_id: string
+          current_amount: number
+          description: string
+          end_date: string
+          goal_amount: number
+          id: string
+          image_url: string | null
+          start_date: string
+          status: string
+          title: string
+          token_type: Database["public"]["Enums"]["token_type"]
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          creator_id: string
+          current_amount?: number
+          description: string
+          end_date: string
+          goal_amount: number
+          id?: string
+          image_url?: string | null
+          start_date?: string
+          status?: string
+          title: string
+          token_type: Database["public"]["Enums"]["token_type"]
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          creator_id?: string
+          current_amount?: number
+          description?: string
+          end_date?: string
+          goal_amount?: number
+          id?: string
+          image_url?: string | null
+          start_date?: string
+          status?: string
+          title?: string
+          token_type?: Database["public"]["Enums"]["token_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      faucet_claims: {
+        Row: {
+          amount_claimed: number
+          created_at: string
+          id: string
+          last_claim_at: string
+          transaction_hash: string | null
+          user_id: string | null
+          wallet_address: string
+        }
+        Insert: {
+          amount_claimed?: number
+          created_at?: string
+          id?: string
+          last_claim_at?: string
+          transaction_hash?: string | null
+          user_id?: string | null
+          wallet_address: string
+        }
+        Update: {
+          amount_claimed?: number
+          created_at?: string
+          id?: string
+          last_claim_at?: string
+          transaction_hash?: string | null
+          user_id?: string | null
+          wallet_address?: string
+        }
+        Relationships: []
+      }
       governance_proposals: {
         Row: {
           created_at: string
@@ -622,6 +741,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_claim_vex: {
+        Args: { p_wallet_address: string }
+        Returns: boolean
+      }
       get_voting_power: {
         Args: { p_user_id: string }
         Returns: number
@@ -632,6 +755,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
         }
         Returns: boolean
+      }
+      time_until_next_claim: {
+        Args: { p_wallet_address: string }
+        Returns: unknown
       }
       update_token_balance: {
         Args: {
